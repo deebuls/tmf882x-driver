@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from importlib import resources
 from time import sleep
-from typing import Iterable
+from typing import Iterable, List
 
 from smbus2 import SMBus, i2c_msg
 
@@ -212,7 +212,7 @@ class TMF882x:
         self._send_bootloader_command(0x11, [])
         sleep(0.003)
 
-    def _send_bootloader_command(self, command: int, data: list[int]):
+    def _send_bootloader_command(self, command: int, data: List[int]):
         """Send a command to the bootloader."""
         message = [command, len(data)] + data
         checksum = (sum(message) & 0xFF) ^ 0xFF
@@ -243,14 +243,14 @@ class TMF882x:
             raise TMF882xException(f"Command failed with status {status}.")
 
 
-def _chunks(lst: list[int], chunk_size: int = 80) -> Iterable[list[int]]:
+def _chunks(lst: List[int], chunk_size: int = 32) -> Iterable[List[int]]:
     i = 0
     while i < len(lst):
         yield lst[i : i + chunk_size]
         i += chunk_size
 
 
-def _block_read(bus: SMBus, address: int, register: int, size: int) -> list[int]:
+def _block_read(bus: SMBus, address: int, register: int, size: int) -> List[int]:
     result = []
     while size > 0:
         result += bus.read_i2c_block_data(address, register, min(size, 32))
@@ -259,7 +259,7 @@ def _block_read(bus: SMBus, address: int, register: int, size: int) -> list[int]
     return result
 
 
-def _block_write(bus: SMBus, address: int, register: int, data: list[int]) -> None:
+def _block_write(bus: SMBus, address: int, register: int, data: List[int]) -> None:
     while len(data):
         bus.write_i2c_block_data(address, register, data[:32])
         register += 32

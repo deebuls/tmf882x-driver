@@ -1,4 +1,5 @@
-SPAD_MAP_DIMENSIONS: dict[int, tuple[int, int]] = {
+from typing import Dict, Tuple
+SPAD_MAP_DIMENSIONS: Dict[int, Tuple[int, int]] = {
     1: (3, 3),
     2: (3, 3),
     3: (3, 3),

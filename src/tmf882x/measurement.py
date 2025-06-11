@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from tmf882x import SPAD_MAP_DIMENSIONS
-
+from typing import List, Union
 
 @dataclass
 class TMF882xSpadResult:
@@ -9,6 +9,7 @@ class TMF882xSpadResult:
     distance: int
     secondary_confidence: int
     secondary_distance: int
+    histogram: Union[List[int],  None] = None
 
 
 @dataclass
@@ -20,11 +21,11 @@ class TMF882xMeasurement:
     photon_count: int
     reference_count: int
     system_tick: int
-    results: list[TMF882xSpadResult]
+    results: List[TMF882xSpadResult]
     spad_map: int
 
     @classmethod
-    def from_bytes(cls, data: list[int], spad_map: int) -> "TMF882xMeasurement":
+    def from_bytes(cls, data: List[int], spad_map: int) -> "TMF882xMeasurement":
         return TMF882xMeasurement(
             result_number=data[4],
             temperature=int.from_bytes(data[5:6], "little", signed=True),
@@ -46,7 +47,7 @@ class TMF882xMeasurement:
         )
 
     @property
-    def grid(self) -> list[list[TMF882xSpadResult]]:
+    def grid(self) -> List[List[TMF882xSpadResult]]:
         try:
             x, y = SPAD_MAP_DIMENSIONS[self.spad_map]
         except KeyError:
@@ -59,9 +60,17 @@ class TMF882xMeasurement:
         return [[applicable_results[column + x * row] for column in range(x)] for row in range(y)]
 
     @property
-    def primary_grid(self) -> list[list[int]]:
+    def primary_grid(self) -> List[List[int]]:
         return [[column.distance for column in row] for row in self.grid]
 
     @property
-    def secondary_grid(self) -> list[list[int]]:
+    def secondary_grid(self) -> List[List[int]]:
         return [[column.secondary_distance for column in row] for row in self.grid]
+
+    @property
+    def primary_grid_confidence(self) -> List[List[int]]:
+        return [[column.confidence for column in row] for row in self.grid]
+
+    @property
+    def secondary_grid_confidence(self) -> List[List[int]]:
+        return [[column.secondary_confidence for column in row] for row in self.grid]
